@@ -33,6 +33,9 @@ public:
 	void writeImageToPPMFile(Camera *camera);
 	void convertPPMToPNG(std::string ppmFileName, int osType);
 	void forwardRenderingPipeline(Camera *camera, Scene *scene);
+
+	// in order to use this-> this is included in here
+	bool clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera);
 };
 
 #endif

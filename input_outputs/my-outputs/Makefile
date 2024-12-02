@@ -1,3 +1,8 @@
+all:
+	g++ ../../code_template/*.cpp -O3 -o rasterizer -std=c++17 -w
+
+	./rasterizer ../clipping_example/empty_box_clipped.xml
+
 	# ./rasterizer ../culling_disabled_inputs/empty_box.xml
 	# ./rasterizer ../culling_disabled_inputs/filled_box.xml
 	# ./rasterizer ../culling_disabled_inputs/sample.xml
@@ -24,7 +29,3 @@
 	# ./rasterizer ../different_projection_type/horse_and_mug/horse_and_mug_ortographic.xml
 	# ./rasterizer ../different_projection_type/horse_and_mug/horse_and_mug_perspective.xml
 	
-all:
-	g++ ../../code_template/*.cpp -O3 -o rasterizer -std=c++17 -w
-
-	./rasterizer ../clipping_example/empty_box_clipped.xml
