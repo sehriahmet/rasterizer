@@ -13,7 +13,7 @@ all:
 	# ./rasterizer ../culling_disabled_inputs/flag_turkey.xml
 	# ./rasterizer ../culling_disabled_inputs/horse_and_mug.xml
 
-	 ./rasterizer ../culling_enabled_inputs/empty_box.xml
+	# ./rasterizer ../culling_enabled_inputs/empty_box.xml
 	# ./rasterizer ../culling_enabled_inputs/filled_box.xml
 	# ./rasterizer ../culling_enabled_inputs/sample.xml
 	# ./rasterizer ../culling_enabled_inputs/flag_czechia_alternative.xml
