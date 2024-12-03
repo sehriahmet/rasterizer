@@ -656,49 +656,122 @@ bool visible(float den, float num, float &t_e, float &t_l) {
     return true;
 }
 
-bool Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) {
-	// cout << vertex1.x <<endl;
+std::vector<Vec3> Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) {
+    float x_min = camera->left;
+    float x_max = camera->right;
+    float y_min = camera->bottom;
+    float y_max = camera->top;
+    float z_min = camera->near;
+    float z_max = camera->far;
 
-	float x_min = camera->left;
-	float x_max = camera->right;
-	float y_min = camera->bottom;
-	float y_max = camera->top;
-	float z_min = camera->near;
-	float z_max = camera->far;
+    float t_e = 0.0f;
+    float t_l = 1.0f;
 
-	float t_e = 0.0f;
-	float t_l = 1.0f;
-
-	float dx = vertex2.x - vertex1.x;
+    float dx = vertex2.x - vertex1.x;
     float dy = vertex2.y - vertex1.y;
     float dz = vertex2.z - vertex1.z;
 
-	if (visible(dx, x_min - vertex1.x, t_e, t_l)) {
-		if (visible(-dx, vertex1.x - x_max, t_e, t_l)) {
-			if (visible(dy, y_min - vertex1.y, t_e, t_l)) {
-				if (visible(-dy, vertex1.y - y_max, t_e, t_l)) {
-					if (visible(dz, z_min - vertex1.z, t_e, t_l)) {
-						if (visible(-dz, vertex1.z - z_max, t_e, t_l)) {
-							if (t_l < 1) {
-								vertex2.x = vertex1.x + dx * t_l;
-								vertex2.y = vertex1.y + dy * t_l;
-								vertex2.z = vertex1.z + dz * t_l;
-							}
-							if (t_e > 0) {
-								vertex1.x = vertex1.x + dx * t_e;
-								vertex1.y = vertex1.y + dy * t_e;
-								vertex1.z = vertex1.z + dy * t_e;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	std::vector<Vec3> resultVertices (2, {-1,-1,-1,-1});
+    // Check visibility in the x, y, z directions
+    if (visible(dx, x_min - vertex1.x, t_e, t_l) &&
+        visible(-dx, vertex1.x - x_max, t_e, t_l) &&
+        visible(dy, y_min - vertex1.y, t_e, t_l) &&
+        visible(-dy, vertex1.y - y_max, t_e, t_l) &&
+        visible(dz, z_min - vertex1.z, t_e, t_l) &&
+        visible(-dz, vertex1.z - z_max, t_e, t_l)) {
 
-	return false; // if there is no element in the bounding box return false
-	
-	return true; // if there is something in the bounding box return true
+        // If the line is partially inside the frustum, update the vertices
+        if (t_l < 1) {
+            vertex2.x = vertex1.x + dx * t_l;
+            vertex2.y = vertex1.y + dy * t_l;
+            vertex2.z = vertex1.z + dz * t_l;
+        }
+        if (t_e > 0) {
+            vertex1.x = vertex1.x + dx * t_e;
+            vertex1.y = vertex1.y + dy * t_e;
+            vertex1.z = vertex1.z + dz * t_e;
+        }
+        resultVertices[0] = vertex1;
+		resultVertices[1] = vertex2;
+    }
+	resultVertices[0].colorId = vertex1.colorId;
+	resultVertices[1].colorId = vertex2.colorId;
+	// cout<<vertex1.colorId<<endl;
+	return resultVertices;
+}
+
+// TODO this function should be changed !!
+void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
+    // Convert floating-point coordinates to integers
+    int x0 = round(v0.x), y0 = round(v0.y);
+    int x1 = round(v1.x), y1 = round(v1.y);
+
+    // Calculate differences
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+
+    // Determine step direction
+    int sx = (dx >= 0) ? 1 : -1;
+    int sy = (dy >= 0) ? 1 : -1;
+
+    // Absolute values of differences
+    dx = abs(dx);
+    dy = abs(dy);
+
+    // Decision parameter initialization
+    int d; // Decision parameter
+    int x = x0, y = y0;
+
+    if (dx > dy) { // Horizontal or shallow slope
+        d = 2 * dy - dx;
+        while (x != x1) {
+            // Rasterize current pixel
+            if (x >= 0 && x < camera->horRes && y >= 0 && y < camera->verRes) {
+                depthBuffer[x][y] = v0.z;
+
+                // Testing color; update as needed
+                Color c1;
+                c1.r = 0;
+                c1.g = 0;
+                c1.b = 0;
+                this->image[x][y] = c1;
+            }
+            if (d > 0) {
+                y += sy;
+                d -= 2 * dx;
+            }
+            d += 2 * dy;
+            x += sx;
+        }
+    } else { // Vertical or steep slope
+        d = 2 * dx - dy;
+        while (y != y1) {
+            // Rasterize current pixel
+            if (x >= 0 && x < camera->horRes && y >= 0 && y < camera->verRes) {
+                depthBuffer[x][y] = v0.z;
+
+                // Testing color; update as needed
+                Color c1;
+                c1.r = 15;
+                c1.g = 15;
+                c1.b = 15;
+                this->image[x][y] = c1;
+            }
+            if (d > 0) {
+                x += sx;
+                d -= 2 * dy;
+            }
+            d += 2 * dx;
+            y += sy;
+        }
+    }
+}
+
+
+void Scene::rasterizeEdges(vector<Vec3> transformedVertices, const Triangle &triangle, vector<vector<double>> &depthBuffer, Camera *camera) {
+    drawLine(transformedVertices[triangle.vertexIds[0]-1], transformedVertices[triangle.vertexIds[1]-1], depthBuffer, camera);
+	drawLine(transformedVertices[triangle.vertexIds[1]-1], transformedVertices[triangle.vertexIds[2]-1], depthBuffer, camera);
+	drawLine(transformedVertices[triangle.vertexIds[2]-1], transformedVertices[triangle.vertexIds[0]-1], depthBuffer, camera);
 }
 
 
@@ -707,6 +780,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 
 	vector<vector<double>> depthBuffer(camera->horRes, vector<double>(camera->verRes, std::numeric_limits<double>::infinity()));
 	vector<Vec3> transformedVertices (scene->vertices.size(), {0, 0, 0});
+
 	for(Mesh *mesh : meshes) {
 		// int currentMeshId = mesh->meshId;
 
@@ -732,15 +806,30 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			// cout<<mesh->type<<endl;
 
 			if (mesh->type == 0) { // (mesh->type == "wireframe")
-				clipLine(transformedVertices[triangle.vertexIds[0] - 1], transformedVertices[triangle.vertexIds[1] - 1], camera);
-				clipLine(transformedVertices[triangle.vertexIds[1] - 1], transformedVertices[triangle.vertexIds[2] - 1], camera);
-				clipLine(transformedVertices[triangle.vertexIds[2] - 1], transformedVertices[triangle.vertexIds[0] - 1], camera);
-				// cout << transformedVertices[triangle.vertexIds[0] - 1] <<endl;
+				// cout << "basla   " << transformedVertices[triangle.vertexIds[0] - 1] <<transformedVertices[triangle.vertexIds[1] - 1] <<endl;
+				std::vector<Vec3> clippedLine = clipLine(transformedVertices[triangle.vertexIds[0] - 1], transformedVertices[triangle.vertexIds[1] - 1], camera);
+				transformedVertices[triangle.vertexIds[0] - 1] = clippedLine[0];
+				transformedVertices[triangle.vertexIds[1] - 1] = clippedLine[1];
+
+				clippedLine = clipLine(transformedVertices[triangle.vertexIds[1] - 1], transformedVertices[triangle.vertexIds[2] - 1], camera);
+				transformedVertices[triangle.vertexIds[1] - 1] = clippedLine[0];
+				transformedVertices[triangle.vertexIds[2] - 1] = clippedLine[1];
+
+				clippedLine = clipLine(transformedVertices[triangle.vertexIds[2] - 1], transformedVertices[triangle.vertexIds[0] - 1], camera);
+				transformedVertices[triangle.vertexIds[2] - 1] = clippedLine[0];
+				transformedVertices[triangle.vertexIds[0] - 1] = clippedLine[1];
+				// clipLine(transformedVertices[triangle.vertexIds[1] - 1], transformedVertices[triangle.vertexIds[2] - 1], camera);
+				// clipLine(transformedVertices[triangle.vertexIds[2] - 1], transformedVertices[triangle.vertexIds[0] - 1], camera);
+				// cout <<"2.      " << transformedVertices[triangle.vertexIds[0] - 1] << transformedVertices[triangle.vertexIds[1] - 1]<<"\n \n"<<endl;
 			}
 
 			if (scene->cullingEnabled && isBackface(triangle, transformedVertices, camera)) {
                 continue;
             }
+
+			if (mesh->type == 0) {
+                // rasterizeEdges(transformedVertices, triangle, depthBuffer, camera);
+            } 
 
 			// if the object is wireframe mesh: clip vertices first 
 

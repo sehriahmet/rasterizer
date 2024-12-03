@@ -35,7 +35,11 @@ public:
 	void forwardRenderingPipeline(Camera *camera, Scene *scene);
 
 	// in order to use this-> this is included in here
-	bool clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera);
+	std::vector<Vec3> clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera);
+	void drawLine(Vec3 v0, Vec3 v1, std::vector<std::vector<double>> &depthBuffer, Camera *camera);
+	void rasterizeEdges(std::vector<Vec3> transformedVertices, const Triangle &triangle, std::vector<std::vector<double>> &depthBuffer, Camera *camera);
+	Color interpolateColor(const std::vector<Color> &colors, Vec3 bary);
+
 };
 
 #endif
