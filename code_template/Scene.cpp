@@ -780,40 +780,51 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
 
 // TODO this function should be changed !!
 void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
-    // Convert floating-point coordinates to integers
+
     int x0 = round(v0.x), y0 = round(v0.y);
     int x1 = round(v1.x), y1 = round(v1.y);
 
-    // Calculate differences
     int dx = x1 - x0;
     int dy = y1 - y0;
 
-    // Determine step direction
     int sx = (dx >= 0) ? 1 : -1;
     int sy = (dy >= 0) ? 1 : -1;
 
-    // Absolute values of differences
     dx = abs(dx);
     dy = abs(dy);
 
-    // Decision parameter initialization
-    int d; // Decision parameter
+    Color startColor = *colorsOfVertices[v0.colorId - 1];
+    Color endColor = *colorsOfVertices[v1.colorId - 1];
+
+    int steps = (dx > dy) ? dx : dy;
+
+    double dr = (endColor.r - startColor.r) / static_cast<double>(steps);
+    double dg = (endColor.g - startColor.g) / static_cast<double>(steps);
+    double db = (endColor.b - startColor.b) / static_cast<double>(steps);
+
+    double r = startColor.r, g = startColor.g, b = startColor.b;
+
+    int d;
     int x = x0, y = y0;
 
-    if (dx > dy) { // Horizontal or shallow slope
+    if (dx > dy) { 
         d = 2 * dy - dx;
-        while (x != x1) {
-            // Rasterize current pixel
+        for (int i = 0; i <= steps; ++i) {
+
             if (x >= 0 && x < camera->horRes && y >= 0 && y < camera->verRes) {
                 depthBuffer[x][y] = v0.z;
 
-                // Testing color; update as needed
                 Color c1;
-                c1.r = colorsOfVertices[v0.colorId-1]->r;
-                c1.g = colorsOfVertices[v0.colorId-1]->g;
-                c1.b = colorsOfVertices[v0.colorId-1]->b;
+                c1.r = r;
+                c1.g = g;
+                c1.b = b;
                 this->image[x][y] = c1;
             }
+
+            r += dr;
+            g += dg;
+            b += db;
+
             if (d > 0) {
                 y += sy;
                 d -= 2 * dx;
@@ -821,20 +832,24 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
             d += 2 * dy;
             x += sx;
         }
-    } else { // Vertical or steep slope
+    } else { 
         d = 2 * dx - dy;
-        while (y != y1) {
-            // Rasterize current pixel
+        for (int i = 0; i <= steps; ++i) {
+
             if (x >= 0 && x < camera->horRes && y >= 0 && y < camera->verRes) {
                 depthBuffer[x][y] = v0.z;
 
-                // Testing color; update as needed
                 Color c1;
-                c1.r = colorsOfVertices[v0.colorId-1]->r;
-                c1.g = colorsOfVertices[v0.colorId-1]->g;
-                c1.b = colorsOfVertices[v0.colorId-1]->b;
+                c1.r = r;
+                c1.g = g;
+                c1.b = b;
                 this->image[x][y] = c1;
             }
+
+            r += dr;
+            g += dg;
+            b += db;
+
             if (d > 0) {
                 x += sx;
                 d -= 2 * dy;
@@ -844,6 +859,7 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
         }
     }
 }
+
 
 
 void Scene::rasterizeEdges(vector<Vec3> transformedVertices, const Triangle &triangle, vector<vector<double>> &depthBuffer, Camera *camera) {
@@ -865,7 +881,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 		// cout << "gercek size "<< scene->vertices.size()<<  "     Processing rMesh ID: " << currentMeshId << endl;
         int i = 0;
 		for(auto &vertices1 : scene->vertices) {
-			cout<< colorsOfVertices[i-1]->r << "\n"<<endl;
+			// cout<< colorsOfVertices[i-1]->r << "\n"<<endl;
 			modelingTransformation(*vertices1, vertices1->colorId, mesh->transformationTypes, mesh->transformationIds, scene, mesh);
 
 			viewTransformations(*vertices1, camera);
@@ -886,7 +902,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			// cout << isBackface(triangle, transformedVertices, camera) << endl;
 
 			// cout<<mesh->type<<endl;
-			
+			/*
 			if (mesh->type == 0) { // (mesh->type == "wireframe")
 				// cout << "basla " << transformedVertices[triangle.vertexIds[0] - 1] 
 				// 	<< transformedVertices[triangle.vertexIds[1] - 1] 
@@ -910,7 +926,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 				// 	<< transformedVertices[triangle.vertexIds[1] - 1] 
 				// 	<<transformedVertices[triangle.vertexIds[2] - 1] 
 				// 	<<"\n \n"<<endl;
-			}
+			} */
 
 		}
 		
