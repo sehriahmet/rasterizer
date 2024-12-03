@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
             // Notice that os_type is not given as 1 (Ubuntu) or 2 (Windows), below call doesn't do conversion.
             // Change os_type to 1 or 2, after being sure that you have ImageMagick installed.
             scene->convertPPMToPNG(scene->cameras[i]->outputFilename, 0);
-
-            scene = tempScene;
+            delete scene;
+            scene = new Scene(xmlPath);
         }
 
         return 0;
