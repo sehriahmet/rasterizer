@@ -3,7 +3,7 @@ all:
 
 	./rasterizer ../clipping_example/empty_box_clipped.xml
 
-	# ./rasterizer ../culling_disabled_inputs/empty_box.xml
+	./rasterizer ../culling_disabled_inputs/empty_box.xml
 	# ./rasterizer ../culling_disabled_inputs/filled_box.xml
 	# ./rasterizer ../culling_disabled_inputs/sample.xml
 	# ./rasterizer ../culling_disabled_inputs/flag_czechia_alternative.xml

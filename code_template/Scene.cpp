@@ -430,6 +430,8 @@ void modelingTransformation(Vec3 &vertices1, int colorId, const vector<char> &tr
 // kamerada gaze ve up vectorleri bazen dik gelmiyor ornegin: emptyboxclipped 1. olanindan.. !!
 void viewTransformations(Vec3 &vertices1, Camera *camera) {
     Matrix4 viewMatrix;
+	// cout << viewMatrix <<endl;
+	// cout<< vertices1.x << "  " << vertices1.y << "  " << vertices1.z << endl;
 	Vec4 triangleHc = { vertices1.x, vertices1.y, vertices1.z, 1 };
 
 	Vec3 w = camera->w;
@@ -467,22 +469,26 @@ void projectTransformations(Vec3 &vertices1, Camera *camera) {
 	Vec4 triangleHc = { vertices1.x, vertices1.y, vertices1.z, 1 };
 
 	// cout << "projection type: " << camera->projectionType <<"   "<<  
-	//		(camera->right - camera->left)<< "  " <<
+	// 		(camera->right - camera->left)<< "  " <<
 	// 		(camera->top - camera->bottom)<< "   " << 
 	// 		(camera->far - camera->near)<< endl;
+	
 	if (camera->projectionType == 0) {
 		projectionMatrix.values[0][0] = 2/(camera->right - camera->left);
 		projectionMatrix.values[0][1] = 0;
 		projectionMatrix.values[0][2] = 0;
 		projectionMatrix.values[0][3] = -((camera->right + camera->left)/ (camera->right - camera->left));
+
 		projectionMatrix.values[1][0] = 0;
 		projectionMatrix.values[1][1] = 2/(camera->top - camera->bottom);
 		projectionMatrix.values[1][2] = 0;
 		projectionMatrix.values[1][3] = -((camera->top + camera->bottom)/ (camera->top - camera->bottom));
+
 		projectionMatrix.values[2][0] = 0;
 		projectionMatrix.values[2][1] = 0;
 		projectionMatrix.values[2][2] = -(2/(camera->far - camera->near));
 		projectionMatrix.values[2][3] = -((camera->far + camera->near)/ (camera->far - camera->near));
+
 		projectionMatrix.values[3][0] = 0;
 		projectionMatrix.values[3][1] = 0;
 		projectionMatrix.values[3][2] = 0;
@@ -493,14 +499,17 @@ void projectTransformations(Vec3 &vertices1, Camera *camera) {
 		projectionMatrix.values[0][1] = 0;
 		projectionMatrix.values[0][2] = (camera->right + camera->left)/ (camera->right - camera->left);
 		projectionMatrix.values[0][3] = 0;
+
 		projectionMatrix.values[1][0] = 0;
 		projectionMatrix.values[1][1] = (2*camera->near) / (camera->top - camera->bottom);
 		projectionMatrix.values[1][2] = (camera->top + camera->bottom)/ (camera->top - camera->bottom);
 		projectionMatrix.values[1][3] = 0;
+
 		projectionMatrix.values[2][0] = 0;
 		projectionMatrix.values[2][1] = 0;
 		projectionMatrix.values[2][2] = -((camera->far + camera->near)/ (camera->far - camera->near));
 		projectionMatrix.values[2][3] = -(2 * camera->near * camera->far) / (camera->far - camera->near);
+
 		projectionMatrix.values[3][0] = 0;
 		projectionMatrix.values[3][1] = 0;
 		projectionMatrix.values[3][2] = -1;
@@ -509,12 +518,48 @@ void projectTransformations(Vec3 &vertices1, Camera *camera) {
 		printf("something wrong in project transformation");
 	}
 
+	// cout << projectionMatrix << " \n \n " << endl;
 	triangleHc = multiplyMatrixWithVec4(projectionMatrix, triangleHc);
-	
+	// cout << triangleHc << "\n\n"<<endl;
+	vertices1.x = triangleHc.x/triangleHc.t;
+	vertices1.y = triangleHc.y/triangleHc.t;
+	vertices1.z = triangleHc.z/triangleHc.t;
+    // cout << vertices1.x << "   " << vertices1.y << "   "  << vertices1.z <<"\n\n" << endl;
+}
+
+void viewportTransformation(Vec3 &vertices1, Camera *camera) {
+	Matrix4 vpMatrix;
+	Vec4 triangleHc = { vertices1.x, vertices1.y, vertices1.z, 1 };
+
+	auto n_x = camera->horRes;
+	auto n_y = camera->verRes;
+
+	vpMatrix.values[0][0] = n_x/2;
+	vpMatrix.values[0][1] = 0;
+	vpMatrix.values[0][2] = 0;
+	vpMatrix.values[0][3] = (n_x - 1)/2 + camera->left; // it can be wrong as camera->left is x_min
+
+	vpMatrix.values[1][0] = 0;
+	vpMatrix.values[1][1] = n_y/2;
+	vpMatrix.values[1][2] = 0;
+	vpMatrix.values[1][3] = (n_y-1)/2 + camera->bottom; // it can be wrong that camera->bottom is y_min
+
+	vpMatrix.values[2][0] = 0;
+	vpMatrix.values[2][1] = 0;
+	vpMatrix.values[2][2] = 1/2;
+	vpMatrix.values[2][3] = 1/2;
+
+	vpMatrix.values[3][0] = 0;
+	vpMatrix.values[3][1] = 0;
+	vpMatrix.values[3][2] = 0;
+	vpMatrix.values[3][3] = 0;
+
+	triangleHc = multiplyMatrixWithVec4(vpMatrix, triangleHc);
+	cout<<triangleHc<<"\n\n"<<endl;
 	vertices1.x = triangleHc.x;
 	vertices1.y = triangleHc.y;
 	vertices1.z = triangleHc.z;
-    // cout << vertices1.x << "   " << vertices1.y << "   "  << vertices1.z << endl;
+
 }
 
 bool isBackface(Triangle &triangle, vector<Vec3> &Vertices, Camera *camera) {
@@ -700,6 +745,35 @@ std::vector<Vec3> Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) 
 	return resultVertices;
 }
 
+/*
+// TODO this function should be changed !!
+void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
+	int y = abs(round(v0.y));
+	int d = abs(v0.y - v1.y) + 0.5* abs(v1.x - v0.x);
+
+	// float c = color[0];
+	// float dc = (color1 - color0) / (x1 - x0)
+
+	Color c;
+	c.r = 0;
+	c.g = 0;
+	c.b = 0;
+
+	for (int x = abs(v0.x); x < abs(v1.x); x++) {
+		// cout << x << "    " << y<<endl;
+		this->image[x][y] = c;
+		if (d<0) { // choose NE
+			y += 1;
+			d += abs(v0.y - v1.y) + abs(v1.x - v0.x);
+		} else {
+			d += abs(v0.y - v1.y);
+		}
+		// c += dc;
+	}
+
+}
+*/
+
 // TODO this function should be changed !!
 void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
     // Convert floating-point coordinates to integers
@@ -752,9 +826,9 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
 
                 // Testing color; update as needed
                 Color c1;
-                c1.r = 15;
-                c1.g = 15;
-                c1.b = 15;
+                c1.r = 0;
+                c1.g = 0;
+                c1.b = 0;
                 this->image[x][y] = c1;
             }
             if (d > 0) {
@@ -794,6 +868,8 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 
 			projectTransformations(*vertices1, camera);
 
+			viewportTransformation(*vertices1, camera);
+
 			transformedVertices[i] = *vertices1;
 			i++;
             // cout << transformedVertices[i-1] << endl;
@@ -804,9 +880,11 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			// cout << isBackface(triangle, transformedVertices, camera) << endl;
 
 			// cout<<mesh->type<<endl;
-
+			/*
 			if (mesh->type == 0) { // (mesh->type == "wireframe")
-				// cout << "basla   " << transformedVertices[triangle.vertexIds[0] - 1] <<transformedVertices[triangle.vertexIds[1] - 1] <<endl;
+				cout << "basla " << transformedVertices[triangle.vertexIds[0] - 1] 
+					<< transformedVertices[triangle.vertexIds[1] - 1] 
+					<<transformedVertices[triangle.vertexIds[2] - 1] <<endl;
 				std::vector<Vec3> clippedLine = clipLine(transformedVertices[triangle.vertexIds[0] - 1], transformedVertices[triangle.vertexIds[1] - 1], camera);
 				transformedVertices[triangle.vertexIds[0] - 1] = clippedLine[0];
 				transformedVertices[triangle.vertexIds[1] - 1] = clippedLine[1];
@@ -820,15 +898,18 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 				transformedVertices[triangle.vertexIds[0] - 1] = clippedLine[1];
 				// clipLine(transformedVertices[triangle.vertexIds[1] - 1], transformedVertices[triangle.vertexIds[2] - 1], camera);
 				// clipLine(transformedVertices[triangle.vertexIds[2] - 1], transformedVertices[triangle.vertexIds[0] - 1], camera);
-				// cout <<"2.      " << transformedVertices[triangle.vertexIds[0] - 1] << transformedVertices[triangle.vertexIds[1] - 1]<<"\n \n"<<endl;
-			}
+				cout <<"2.    " << transformedVertices[triangle.vertexIds[0] - 1] 
+					<< transformedVertices[triangle.vertexIds[1] - 1] 
+					<<transformedVertices[triangle.vertexIds[2] - 1] 
+					<<"\n \n"<<endl;
+			} */
 
 			if (scene->cullingEnabled && isBackface(triangle, transformedVertices, camera)) {
                 continue;
             }
 
 			if (mesh->type == 0) {
-                // rasterizeEdges(transformedVertices, triangle, depthBuffer, camera);
+                rasterizeEdges(transformedVertices, triangle, depthBuffer, camera);
             } 
 
 			// if the object is wireframe mesh: clip vertices first 
