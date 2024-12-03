@@ -809,9 +809,9 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
 
                 // Testing color; update as needed
                 Color c1;
-                c1.r = 0;
-                c1.g = 0;
-                c1.b = 0;
+                c1.r = colorsOfVertices[v0.colorId-1]->r;
+                c1.g = colorsOfVertices[v0.colorId-1]->g;
+                c1.b = colorsOfVertices[v0.colorId-1]->b;
                 this->image[x][y] = c1;
             }
             if (d > 0) {
@@ -830,9 +830,9 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
 
                 // Testing color; update as needed
                 Color c1;
-                c1.r = 0;
-                c1.g = 0;
-                c1.b = 0;
+                c1.r = colorsOfVertices[v0.colorId-1]->r;
+                c1.g = colorsOfVertices[v0.colorId-1]->g;
+                c1.b = colorsOfVertices[v0.colorId-1]->b;
                 this->image[x][y] = c1;
             }
             if (d > 0) {
@@ -865,7 +865,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 		// cout << "gercek size "<< scene->vertices.size()<<  "     Processing rMesh ID: " << currentMeshId << endl;
         int i = 0;
 		for(auto &vertices1 : scene->vertices) {
-
+			cout<< colorsOfVertices[i-1]->r << "\n"<<endl;
 			modelingTransformation(*vertices1, vertices1->colorId, mesh->transformationTypes, mesh->transformationIds, scene, mesh);
 
 			viewTransformations(*vertices1, camera);
@@ -878,7 +878,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			i++;
             // cout << transformedVertices[i-1] << endl;
 		}
-		
+
 		// clipping burda yapilabilir
 		
         for(auto &triangle : mesh->triangles){
