@@ -843,10 +843,19 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 	vector<Vec3> transformedVertices (scene->vertices.size(), {0, 0, 0});
 	Matrix4 vpMatrix = viewportTransformation(camera);
 
+	vector<Vec3> tempVertices (scene->vertices.size(), {0, 0, 0});
+
 	for(Mesh *mesh : meshes) {
 		// int currentMeshId = mesh->meshId;
 
 		// cout << "gercek size "<< scene->vertices.size()<<  "     Processing rMesh ID: " << currentMeshId << endl;
+
+		int j=0;
+		for(auto &vertices1 : scene->vertices) {
+			tempVertices[j] = *vertices1;
+			j++;
+		}
+
         int i = 0;
 		for(auto &vertices1 : scene->vertices) {
 			// cout<< colorsOfVertices[i-1]->r << "\n"<<endl;
@@ -867,6 +876,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 
 
 			transformedVertices[i] = *vertices1;
+			*vertices1 = tempVertices[i];
 			i++;
 			// cout<<*vertices1<<"  "<<endl;
             // cout << transformedVertices[i-1] << endl;
