@@ -5,7 +5,7 @@ using namespace std;
 
 Scene *scene;
 
-#include <chrono> // timer library delete when submitting the homework
+#include <chrono> // timer library delete when submitting 1 
 
 int main(int argc, char *argv[])
 {
@@ -26,11 +26,19 @@ int main(int argc, char *argv[])
             // initialize image with basic values
             scene->initializeImage(scene->cameras[i]);
 
-            auto a = std::chrono::high_resolution_clock::now();
+            auto a = std::chrono::high_resolution_clock::now(); // delete timing 2
+
             // do forward rendering pipeline operations
             scene->forwardRenderingPipeline(scene->cameras[i], scene);
+
+            /* delete timing when submitting start 3 */
             auto b = std::chrono::high_resolution_clock::now();
-            cout << scene->cameras[i]->outputFilename << " took " << duration_cast<std::chrono::seconds>(b - a).count() << " seconds" <<  endl;
+            int durationMs = duration_cast<std::chrono::microseconds>(b - a).count();
+            int durationS = duration_cast<std::chrono::seconds>(b - a).count();
+            if (durationS/60 > 0) cout << scene->cameras[i]->outputFilename << " took " << durationS/60 << " minutes " << (durationS%60) << " seconds" << endl;
+            else if (durationS > 0) cout << scene->cameras[i]->outputFilename << " took " << durationS%60 << " seconds" << endl;
+            else cout << scene->cameras[i]->outputFilename << " took " << "0" << " seconds " << duration_cast<std::chrono::microseconds>(b - a).count() << " microseconds" <<  endl;
+            /* delete timing when submitting 3*/
 
             // generate PPM file
             scene->writeImageToPPMFile(scene->cameras[i]);
@@ -42,7 +50,7 @@ int main(int argc, char *argv[])
             delete scene;
             scene = new Scene(xmlPath);
         }
-
+        cout<<"\n"<<endl; // delete when submitting 4
         return 0;
     }
 }
