@@ -590,14 +590,14 @@ bool isBackface(Triangle &triangle, vector<Vec3> &transformedVertices, Camera *c
 }
 
 
-/*
+
 bool visible(float den, float num, float &t_e, float &t_l) {
 	if (den > 0) { // PE
-        float t = num / den;
+        float t = -num / den;
         if (t > t_l) return false;
         if (t > t_e) t_e = t;
     } else if (den < 0) { //PL
-        float t = num / den;
+        float t = -num / den;
         if (t < t_e) return false;
         if (t < t_l) t_l = t;
     } else if (num > 0) { // line parallel to edge
@@ -611,8 +611,8 @@ std::vector<Vec3> Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) 
     float x_max = camera->right;
     float y_min = camera->bottom;
     float y_max = camera->top;
-    float z_min = camera->near;
-    float z_max = camera->far;
+    float z_min = -1;
+    float z_max = 1;
 
     float t_e = 0.0f;
     float t_l = 1.0f;
@@ -629,30 +629,30 @@ std::vector<Vec3> Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) 
     if (visible(dx, x_min - vertex1.x, t_e, t_l) &&
         visible(-dx, vertex1.x - x_max, t_e, t_l) &&
         visible(dy, y_min - vertex1.y, t_e, t_l) &&
-        visible(-dy, vertex1.y - y_max, t_e, t_l)) { // burda z yazan yerleri sildiydim.. // && visible(dz, z_min-vertex1.z, t_e, t_l) && visible(-dz, vertex1.z-z_max, t_e, t_l)
+        visible(-dy, vertex1.y - y_max, t_e, t_l) && visible(dz, z_min-vertex1.z, t_e, t_l) && visible(-dz, vertex1.z-z_max, t_e, t_l)) { // burda z yazan yerleri sildiydim.. // && visible(dz, z_min-vertex1.z, t_e, t_l) && visible(-dz, vertex1.z-z_max, t_e, t_l)
 
         // If the line is partially inside the frustum, update the vertices
         if (t_l < 1) {
 			// cout<<t_l<< "  " << "t_l  " <<  vertex1.z <<"" <<endl;
             vertex2.x = vertex1.x + dx * t_l;
             vertex2.y = vertex1.y + dy * t_l;
-            // vertex2.z = vertex1.z + dz * t_l;
+            vertex2.z = vertex1.z + dz * t_l;
         }
         if (t_e > 0) {
 			// cout<<t_e<< "  " << "t_e  " <<  vertex1.x <<"\n" <<endl;
             vertex1.x = vertex1.x + dx * t_e;
             vertex1.y = vertex1.y + dy * t_e;
-            // vertex1.z = vertex1.z + dz * t_e;
+            vertex1.z = vertex1.z + dz * t_e;
         }
         resultVertices[0] = vertex1;
 		resultVertices[1] = vertex2;
     }
 	resultVertices[0].colorId = vertex1.colorId;
 	resultVertices[1].colorId = vertex2.colorId;
-	cout<<resultVertices[0]<< "  "<< resultVertices[1]<<"\n\n"<<endl;
+	// cout<<resultVertices[0]<< "  "<< resultVertices[1]<<"\n\n"<<endl;
 	return resultVertices;
 }
-*/
+
 
 /*
 // TODO this function should be changed !!
@@ -870,11 +870,11 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			// viewportTransformation(*vertices1, camera);
 
 			// alttaki 5 satir clipped islemi oncesinde yapiliyosa burasi kapatilip asagidaki acilmali
-			Vec4 vpMultiply = {vertices1->x, vertices1->y, vertices1->z, 1.0f};
-			Vec4 multipliedMatrix = multiplyMatrixWithVec4(vpMatrix, vpMultiply);
-			vertices1->x = multipliedMatrix.x;
-			vertices1->y = multipliedMatrix.y;
-			vertices1->z = multipliedMatrix.z;
+			// Vec4 vpMultiply = {vertices1->x, vertices1->y, vertices1->z, 1.0f};
+			// Vec4 multipliedMatrix = multiplyMatrixWithVec4(vpMatrix, vpMultiply);
+			// vertices1->x = multipliedMatrix.x;
+			// vertices1->y = multipliedMatrix.y;
+			// vertices1->z = multipliedMatrix.z;
 
 
 			transformedVertices[i] = *vertices1;
@@ -885,7 +885,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 		}
 
 		// clipping burda yapilabilir.. fikrim degisti -> bence clipping zaten draw line icinde yapiliyor tekrar yapmaya gerek yok..
-		/*
+		
         for(auto &triangle : mesh->triangles){
             // isBackface(triangle, transformedVertices, camera);
 			// cout << isBackface(triangle, transformedVertices, camera) << endl;
@@ -893,9 +893,9 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			// cout<<mesh->type<<endl;
 			
 			if (mesh->type == 0) { // (mesh->type == "wireframe")
-				// cout << "basla " << transformedVertices[triangle.vertexIds[0] - 1] 
-				// 	<< transformedVertices[triangle.vertexIds[1] - 1] 
-				// 	<<transformedVertices[triangle.vertexIds[2] - 1] <<endl;
+				cout << "basla " << transformedVertices[triangle.vertexIds[0] - 1] 
+					<< transformedVertices[triangle.vertexIds[1] - 1] 
+					<<transformedVertices[triangle.vertexIds[2] - 1] <<endl;
 
 				std::vector<Vec3> clippedLine = clipLine(transformedVertices[triangle.vertexIds[0] - 1], transformedVertices[triangle.vertexIds[1] - 1], camera);
 				transformedVertices[triangle.vertexIds[0] - 1] = clippedLine[0];
@@ -911,15 +911,16 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 				// clipLine(transformedVertices[triangle.vertexIds[1] - 1], transformedVertices[triangle.vertexIds[2] - 1], camera);
 				// clipLine(transformedVertices[triangle.vertexIds[2] - 1], transformedVertices[triangle.vertexIds[0] - 1], camera);
 				
-				// cout <<"2.    " << transformedVertices[triangle.vertexIds[0] - 1] 
-				// 	<< transformedVertices[triangle.vertexIds[1] - 1] 
-				// 	<<transformedVertices[triangle.vertexIds[2] - 1] 
-				// 	<<"\n \n"<<endl;
+				cout <<"2.    " << transformedVertices[triangle.vertexIds[0] - 1] 
+					<< transformedVertices[triangle.vertexIds[1] - 1] 
+					<<transformedVertices[triangle.vertexIds[2] - 1] 
+					<<"\n \n"<<endl;
 			} 
 
 		}
-		*/
-		/* burasi viewport transformations clipping isleminden sonra yapiliyosa acilabilir..
+		
+		// burasi viewport transformations clipping isleminden sonra yapiliyosa acilabilir..
+
 		for (int k = 0; k< transformedVertices.size();k++){
 			Matrix4 vpMatrix = viewportTransformation(camera);
 			Vec4 vpMultiply = {transformedVertices[k].x, transformedVertices[k].y, transformedVertices[k].z, 1.0f};
@@ -929,7 +930,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			transformedVertices[k].z = multipliedMatrix.z;
 			// cout<<transformedVertices[k]<<endl;
 		}
-		*/
+		
 
 		for(auto &triangle : mesh->triangles) {
 
