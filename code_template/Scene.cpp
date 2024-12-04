@@ -654,34 +654,6 @@ std::vector<Vec3> Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) 
 }
 
 
-/*
-// TODO this function should be changed !!
-void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
-	int y = abs(round(v0.y));
-	int d = abs(v0.y - v1.y) + 0.5* abs(v1.x - v0.x);
-
-	// float c = color[0];
-	// float dc = (color1 - color0) / (x1 - x0)
-
-	Color c;
-	c.r = 0;
-	c.g = 0;
-	c.b = 0;
-
-	for (int x = abs(v0.x); x < abs(v1.x); x++) {
-		// cout << x << "    " << y<<endl;
-		this->image[x][y] = c;
-		if (d<0) { // choose NE
-			y += 1;
-			d += abs(v0.y - v1.y) + abs(v1.x - v0.x);
-		} else {
-			d += abs(v0.y - v1.y);
-		}
-		// c += dc;
-	}
-
-}
-*/
 
 // TODO this function should be changed !!
 void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
