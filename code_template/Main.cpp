@@ -5,6 +5,8 @@ using namespace std;
 
 Scene *scene;
 
+#include <chrono> // timer library delete when submitting the homework
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -24,8 +26,11 @@ int main(int argc, char *argv[])
             // initialize image with basic values
             scene->initializeImage(scene->cameras[i]);
 
+            auto a = std::chrono::high_resolution_clock::now();
             // do forward rendering pipeline operations
             scene->forwardRenderingPipeline(scene->cameras[i], scene);
+            auto b = std::chrono::high_resolution_clock::now();
+            cout << scene->cameras[i]->outputFilename << " took " << duration_cast<std::chrono::seconds>(b - a).count() << " seconds" <<  endl;
 
             // generate PPM file
             scene->writeImageToPPMFile(scene->cameras[i]);
