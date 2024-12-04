@@ -423,6 +423,13 @@ void modelingTransformation(Vec3 &vertices1, int colorId, const vector<char> &tr
 	vertices1.y = triangleHc.y;
 	vertices1.z = triangleHc.z;
 	
+	// Vec3 result;
+	// result.x = triangleHc.x;
+	// result.y = triangleHc.y;
+	// result.z = triangleHc.z;
+	// result.colorId = vertices1.colorId;
+	// return result;
+	
 	// cout << vertices1.colorId << "   " <<vertices1.x << "   " << vertices1.y << "   "  << vertices1.z << endl;
 
 }
@@ -795,6 +802,7 @@ void Scene::rasterizeFilledTriangle(Triangle &triangle, std::vector<Vec3> &trans
 	// double f_20_2 = f_20(v1.x,v1.y, v2.x, v2.y, v0.x, v0.y);
 	// double f_01_3 = f_01(v2.x,v2.y, v0.x, v0.y, v1.x, v1.y);
 	// cout<<f_12_1<<"  "<<f_20_2<<"  "<<f_01_3<<endl;
+	
 	double triangleArea = f_12(v0.x,v0.y, v1.x, v1.y, v2.x, v2.y);
 	// bounding box in here can be made more efficient as the polygon rasterization algorithm..
 	for (int y=bbox_min_y; y<=bbox_max_y; y++) {
@@ -802,7 +810,7 @@ void Scene::rasterizeFilledTriangle(Triangle &triangle, std::vector<Vec3> &trans
 			double alpha = f_12(x,y, v1.x, v1.y, v2.x, v2.y) / triangleArea; 
 			double beta = f_20(x,y, v2.x, v2.y, v0.x, v0.y) / triangleArea; 
 			double gamma = f_01(x,y, v0.x, v0.y, v1.x, v1.y) / triangleArea;
-			if (alpha>=0 && beta >= 0 && gamma>=0) {
+			if (alpha>=0 && beta >= 0 && gamma>=0 && x >= 0 && x < camera->horRes && y >= 0 && y < camera->verRes) { // maybe <= camera->horRes would be better 
 				// cout<<alpha * v0.z<<"  "<<beta<<"  "<<v2.z<<"\n"<<endl;
 				double depth = alpha * v0.z + beta * v1.z + gamma * v2.z;
 				if (depth < depthBuffer[x][y]) {
@@ -860,6 +868,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 
 			transformedVertices[i] = *vertices1;
 			i++;
+			// cout<<*vertices1<<"  "<<endl;
             // cout << transformedVertices[i-1] << endl;
 		}
 
@@ -917,6 +926,8 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			if (mesh->type == 0) {
                 rasterizeEdges(transformedVertices, triangle, depthBuffer, camera);
             } else {
+				// cout<<"before seg fault:  " << transformedVertices[triangle.vertexIds[0]-1]<<"  "<<triangle.vertexIds[1]<<"  "<<triangle.vertexIds[2]<<endl;
+				// should be clipped before enter this function 
 				rasterizeFilledTriangle(triangle, transformedVertices, camera, depthBuffer);
 			}
 		}
