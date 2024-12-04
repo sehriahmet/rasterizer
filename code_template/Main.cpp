@@ -33,11 +33,11 @@ int main(int argc, char *argv[])
 
             /* delete timing when submitting start 3 */
             auto b = std::chrono::high_resolution_clock::now();
-            int durationMs = duration_cast<std::chrono::microseconds>(b - a).count();
-            int durationS = duration_cast<std::chrono::seconds>(b - a).count();
+            int durationMs = std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();
+            int durationS = std::chrono::duration_cast<std::chrono::seconds>(b - a).count();
             if (durationS/60 > 0) cout << scene->cameras[i]->outputFilename << " took " << durationS/60 << " minutes " << (durationS%60) << " seconds" << endl;
             else if (durationS > 0) cout << scene->cameras[i]->outputFilename << " took " << durationS%60 << " seconds" << endl;
-            else cout << scene->cameras[i]->outputFilename << " took " << "0" << " seconds " << duration_cast<std::chrono::microseconds>(b - a).count() << " microseconds" <<  endl;
+            else cout << scene->cameras[i]->outputFilename << " took " << "0" << " seconds " << std::chrono::duration_cast<std::chrono::microseconds>(b - a).count() << " microseconds" <<  endl;
             /* delete timing when submitting 3*/
 
             // generate PPM file
