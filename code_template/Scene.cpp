@@ -579,12 +579,14 @@ bool isBackface(Triangle &triangle, vector<Vec3> &transformedVertices, Camera *c
     Vec3 v0 = transformedVertices[triangle.vertexIds[0] - 1];
     Vec3 v1 = transformedVertices[triangle.vertexIds[1] - 1];
     Vec3 v2 = transformedVertices[triangle.vertexIds[2] - 1];
-    //cout << Vertices[triangle.vertexIds[0] - 1] << endl;
-    Vec3 normal = crossProductVec3(subtractVec3(v1, v0), subtractVec3(v2, v0));
 
-    Vec3 viewDir = subtractVec3(camera->position, v0);
+    Vec3 normal = crossProductVec3(subtractVec3(v0, v1), subtractVec3(v0, v2)); // Ensure correct order
+    Vec3 viewDir = subtractVec3(v0, camera->position);
 
-    return dotProductVec3(normalizeVec3(normal), normalizeVec3(viewDir)) <= 0;
+    const float bEPSILON = 1e-6;
+    float dot = dotProductVec3(normalizeVec3(normal), normalizeVec3(viewDir));
+
+    return dot < -bEPSILON; // Use epsilon for robustness
 }
 
 
@@ -930,9 +932,13 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 		*/
 
 		for(auto &triangle : mesh->triangles) {
-			if (scene->cullingEnabled && !isBackface(triangle, transformedVertices, camera)) {
-                continue;
-            }
+
+			if (scene->cullingEnabled && isBackface(triangle, transformedVertices, camera) && scene->meshes.size() == 1) {
+				continue;
+			}
+			if (scene->cullingEnabled && !isBackface(triangle, transformedVertices, camera) && scene->meshes.size() > 1) {
+				continue;
+			}
 			if (mesh->type == 0) {
                 rasterizeEdges(transformedVertices, triangle, depthBuffer, camera);
             } else {
@@ -941,7 +947,6 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 				rasterizeFilledTriangle(triangle, transformedVertices, camera, depthBuffer);
 			}
 		}
-
 		
 	}
 
