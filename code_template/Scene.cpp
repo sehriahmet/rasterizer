@@ -580,117 +580,7 @@ bool isBackface(Triangle &triangle, vector<Vec3> &transformedVertices, Camera *c
     return dotProductVec3(normalizeVec3(normal), normalizeVec3(viewDir)) <= 0;
 }
 
-/*
-vector<Vec3> Scene::clipAgainstPlane(const vector<Vec3> &vertices, const Vec3 &planeNormal, double planeOffset) {
-    vector<Vec3> clippedVertices;
 
-    for (size_t i = 0; i < vertices.size(); i++) {
-        const Vec3 &currentVertex = vertices[i];
-        const Vec3 &nextVertex = vertices[(i + 1) % vertices.size()];
-
-        double currentDist = dotProductVec3(planeNormal, currentVertex) - planeOffset;
-        double nextDist = dotProductVec3(planeNormal, nextVertex) - planeOffset;
-
-        // Case 1: Current vertex is inside the plane
-        if (currentDist >= 0) {
-            clippedVertices.push_back(currentVertex);
-        }
-
-        // Case 2: Edge intersects the plane
-        if ((currentDist >= 0) != (nextDist >= 0)) {  // XOR: one inside, one outside
-            double t = currentDist / (currentDist - nextDist);  // Interpolation factor
-            Vec3 intersection;
-			intersection.x = currentVertex.x + (nextVertex.x - currentVertex.x) * t;
-			intersection.y = currentVertex.y + (nextVertex.y - currentVertex.y) * t;
-			intersection.z = currentVertex.z + (nextVertex.z - currentVertex.z) * t;
-            clippedVertices.push_back(intersection);
-        }
-    }
-
-    return clippedVertices;
-}
-
-vector<Vec3> Scene::clipTriangle(const Triangle &triangle, const vector<Vec3> &vertices, Camera *camera) {
-    // Start with the original triangle vertices
-    vector<Vec3> currentVertices = {
-        vertices[triangle.vertexIds[0] - 1],
-        vertices[triangle.vertexIds[1] - 1],
-        vertices[triangle.vertexIds[2] - 1]
-    };
-
-    // Clip against each frustum plane
-    currentVertices = clipAgainstPlane(currentVertices, Vec3(1, 0, 0), camera->left);   // Left plane
-    currentVertices = clipAgainstPlane(currentVertices, Vec3(-1, 0, 0), camera->right); // Right plane
-    currentVertices = clipAgainstPlane(currentVertices, Vec3(0, 1, 0), camera->bottom); // Bottom plane
-    currentVertices = clipAgainstPlane(currentVertices, Vec3(0, -1, 0), camera->top);   // Top plane
-    currentVertices = clipAgainstPlane(currentVertices, Vec3(0, 0, 1), camera->near);   // Near plane
-    currentVertices = clipAgainstPlane(currentVertices, Vec3(0, 0, -1), camera->far);   // Far plane
-
-    return currentVertices;
-}
-*/
-/*
-double edgeFunction(const Vec3 &a, const Vec3 &b, const Vec3 &c) {
-    return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
-}
-
-void Scene::rasterizeTriangleEdges(int x0, int y0, int x1, int y1, int x2, int y2, vector<vector<double>> &depthBuffer, Camera *camera) {
-    // Find the bounding box for the triangle
-    int minX = std::max(0, std::min({x0, x1, x2}));
-    int maxX = std::min(camera->horRes - 1, std::max({x0, x1, x2}));
-    int minY = std::max(0, std::min({y0, y1, y2}));
-    int maxY = std::min(camera->verRes - 1, std::max({y0, y1, y2}));
-
-    // Loop through each pixel in the bounding box
-    for (int x = minX; x <= maxX; x++) {
-        for (int y = minY; y <= maxY; y++) {
-            // Compute barycentric coordinates for the pixel (x, y)
-            double w0 = edgeFunction(Vec3(x1, y1, 0), Vec3(x2, y2, 0), Vec3(x, y, 0));
-            double w1 = edgeFunction(Vec3(x2, y2, 0), Vec3(x0, y0, 0), Vec3(x, y, 0));
-            double w2 = edgeFunction(Vec3(x0, y0, 0), Vec3(x1, y1, 0), Vec3(x, y, 0));
-
-            // Check if the pixel is inside the triangle
-            if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
-                // Interpolate depth using the barycentric coordinates
-                double area = w0 + w1 + w2;
-                double z = (w0 * (x0 * y0) + w1 * (x1 * y1) + w2 * (x2 * y2)) / area;
-
-                // Perform depth test (update depth buffer if closer)
-                if (z < depthBuffer[x][y]) {
-                    depthBuffer[x][y] = z;
-
-                    // Interpolate the color (if needed, e.g., from vertex colors)
-                    // Update color buffer (assuming you have a color buffer for the pixels)
-                    // Set pixel color to the interpolated color
-                    // Example: this->image[x][y] = color; // Apply color interpolation logic here
-                }
-            }
-        }
-    }
-}
-
-
-void Scene::rasterizeClippedTriangle(const vector<Vec3> &clippedVertices, vector<vector<double>> &depthBuffer, Camera *camera) {
-    // The clipped triangle might have more than 3 vertices after clipping
-    // Break it into a fan of triangles
-    for (size_t i = 1; i + 1 < clippedVertices.size(); i++) {
-        Vec3 v0 = clippedVertices[0];
-        Vec3 v1 = clippedVertices[i];
-        Vec3 v2 = clippedVertices[i + 1];
-
-        // Convert normalized coordinates to screen space
-        int x0 = (int)((v0.x - camera->left) / (camera->right - camera->left) * camera->horRes);
-        int y0 = (int)((v0.y - camera->bottom) / (camera->top - camera->bottom) * camera->verRes);
-        int x1 = (int)((v1.x - camera->left) / (camera->right - camera->left) * camera->horRes);
-        int y1 = (int)((v1.y - camera->bottom) / (camera->top - camera->bottom) * camera->verRes);
-        int x2 = (int)((v2.x - camera->left) / (camera->right - camera->left) * camera->horRes);
-        int y2 = (int)((v2.y - camera->bottom) / (camera->top - camera->bottom) * camera->verRes);
-
-        // Rasterize the triangle
-        rasterizeTriangleEdges(x0, y0, x1, y1, x2, y2, depthBuffer, camera);
-    }
-}
-*/
 /*
 bool visible(float den, float num, float &t_e, float &t_l) {
 	if (den > 0) { // PE
@@ -872,13 +762,77 @@ void Scene::rasterizeEdges(vector<Vec3> transformedVertices, const Triangle &tri
 	drawLine(transformedVertices[triangle.vertexIds[2]-1], transformedVertices[triangle.vertexIds[0]-1], depthBuffer, camera);
 }
 
+double f_01(int x, int y, int x0, int y0, int x1, int y1) {
+	return x*(y0-y1) + y*(x1-x0) + x0*y1 - y0*x1;
+}
+
+double f_12(int x, int y, int x1, int y1, int x2, int y2) {
+	return x*(y1-y2) + y*(x2-x1) + x1*y2 - y1*x2;
+}
+
+double f_20(int x, int y, int x2, int y2, int x0, int y0) {
+	return x*(y2-y0) + y*(x0-x2) + x2*y0 - y2*x0;
+}
+
+void Scene::rasterizeFilledTriangle(Triangle &triangle, std::vector<Vec3> &transformedVertices, Camera *camera, std::vector<std::vector<double>> &depthBuffer) {
+	Vec3 v0 = transformedVertices[triangle.vertexIds[0] - 1];
+	Vec3 v1 = transformedVertices[triangle.vertexIds[1] - 1];
+	Vec3 v2 = transformedVertices[triangle.vertexIds[2] - 1];
+
+	Color c;
+	// cout<<v0.colorId<<endl;
+	Color c0 = *colorsOfVertices[v0.colorId - 1];
+    Color c1 = *colorsOfVertices[v1.colorId - 1];
+    Color c2 = *colorsOfVertices[v2.colorId - 1];
+	
+	int bbox_min_x = std::min(v0.x, std::min(v1.x, v2.x));
+	int bbox_min_y = std::min(v0.y, std::min(v1.y, v2.y));
+
+	int bbox_max_x = std::max(v0.x, std::max(v1.x, v2.x));
+	int bbox_max_y = std::max(v0.y, std::max(v1.y, v2.y));
+
+	// double f_12_1 = f_12(v0.x,v0.y, v1.x, v1.y, v2.x, v2.y);
+	// double f_20_2 = f_20(v1.x,v1.y, v2.x, v2.y, v0.x, v0.y);
+	// double f_01_3 = f_01(v2.x,v2.y, v0.x, v0.y, v1.x, v1.y);
+	// cout<<f_12_1<<"  "<<f_20_2<<"  "<<f_01_3<<endl;
+	double triangleArea = f_12(v0.x,v0.y, v1.x, v1.y, v2.x, v2.y);
+	// bounding box in here can be made more efficient as the polygon rasterization algorithm..
+	for (int y=bbox_min_y; y<=bbox_max_y; y++) {
+		for (int x=bbox_min_x; x<=bbox_max_x; x++) {
+			double alpha = f_12(x,y, v1.x, v1.y, v2.x, v2.y) / triangleArea; 
+			double beta = f_20(x,y, v2.x, v2.y, v0.x, v0.y) / triangleArea; 
+			double gamma = f_01(x,y, v0.x, v0.y, v1.x, v1.y) / triangleArea;
+			if (alpha>=0 && beta >= 0 && gamma>=0) {
+				// cout<<alpha * v0.z<<"  "<<beta<<"  "<<v2.z<<"\n"<<endl;
+				double depth = alpha * v0.z + beta * v1.z + gamma * v2.z;
+				if (depth < depthBuffer[x][y]) {
+					// cout<<depthBuffer[x][y]<<"  "<<depth<<endl;
+					depthBuffer[x][y] = depth;
+
+					c.r = alpha*c0.r + beta * c1.r + gamma*c2.r;
+					c.g = alpha*c0.g + beta * c1.g + gamma*c2.g;
+					c.b = alpha*c0.b + beta * c1.b + gamma*c2.b;
+
+					this->image[x][y].r = round(c.r);
+					this->image[x][y].g = round(c.g);
+					this->image[x][y].b = round(c.b);
+				}
+			}
+		}
+	}
+
+	// tri_min_z = std::min(v0.z, std::min(v2.z, v3.z));
+	// cout<<bbox_min_x << "  "<<bbox_min_y<<endl;
+	
+
+}
+
 
 void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 	// TODO: Implement this function
 
 	vector<vector<double>> depthBuffer(camera->horRes, vector<double>(camera->verRes, std::numeric_limits<double>::infinity()));
 	vector<Vec3> transformedVertices (scene->vertices.size(), {0, 0, 0});
-
 	Matrix4 vpMatrix = viewportTransformation(camera);
 
 	for(Mesh *mesh : meshes) {
@@ -896,7 +850,7 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 
 			// viewportTransformation(*vertices1, camera);
 
-
+			// alttaki 5 satir clipped islemi oncesinde yapiliyosa burasi kapatilip asagidaki acilmali
 			Vec4 vpMultiply = {vertices1->x, vertices1->y, vertices1->z, 1.0f};
 			Vec4 multipliedMatrix = multiplyMatrixWithVec4(vpMatrix, vpMultiply);
 			vertices1->x = multipliedMatrix.x;
@@ -962,7 +916,9 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
             }
 			if (mesh->type == 0) {
                 rasterizeEdges(transformedVertices, triangle, depthBuffer, camera);
-            }
+            } else {
+				rasterizeFilledTriangle(triangle, transformedVertices, camera, depthBuffer);
+			}
 		}
 
 		

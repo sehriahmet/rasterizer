@@ -38,6 +38,7 @@ public:
 	std::vector<Vec3> clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera);
 	void drawLine(Vec3 v0, Vec3 v1, std::vector<std::vector<double>> &depthBuffer, Camera *camera);
 	void rasterizeEdges(std::vector<Vec3> transformedVertices, const Triangle &triangle, std::vector<std::vector<double>> &depthBuffer, Camera *camera);
+	void rasterizeFilledTriangle(Triangle &triangle, std::vector<Vec3> &transformedVertices, Camera *camera, std::vector<std::vector<double>> &depthBuffer);
 
 };
 
