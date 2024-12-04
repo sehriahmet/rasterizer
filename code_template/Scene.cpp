@@ -658,14 +658,12 @@ std::vector<Vec3> Scene::clipLine(Vec3 &vertex1, Vec3 &vertex2, Camera *camera) 
 // TODO this function should be changed !!
 void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Camera *camera) {
 
-    int x0 = round(v0.x), y0 = round(v0.y);
-    int x1 = round(v1.x), y1 = round(v1.y);
-
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-
-    int sx = (dx >= 0) ? 1 : -1;
-    int sy = (dy >= 0) ? 1 : -1;
+    double x0 = round(v0.x), y0 = round(v0.y);
+    double x1 = round(v1.x), y1 = round(v1.y);
+    double dx = x1 - x0;
+    double dy = y1 - y0;
+    double sx = (dx >= 0) ? 1 : -1;
+    double sy = (dy >= 0) ? 1 : -1;
 
     dx = abs(dx);
     dy = abs(dy);
@@ -673,7 +671,7 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
     Color startColor = *colorsOfVertices[v0.colorId - 1];
     Color endColor = *colorsOfVertices[v1.colorId - 1];
 
-    int steps = (dx > dy) ? dx : dy;
+    double steps = (dx > dy) ? dx : dy;
 
     double dr = (endColor.r - startColor.r) / static_cast<double>(steps);
     double dg = (endColor.g - startColor.g) / static_cast<double>(steps);
@@ -681,8 +679,8 @@ void Scene::drawLine(Vec3 v0, Vec3 v1, vector<vector<double>> &depthBuffer, Came
 
     double r = startColor.r, g = startColor.g, b = startColor.b;
 
-    int d;
-    int x = x0, y = y0;
+    double d;
+    double x = x0, y = y0;
 
     if (dx > dy) { 
         d = 2 * dy - dx;
@@ -865,9 +863,9 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 			// cout<<mesh->type<<endl;
 			
 			if (mesh->type == 0) { // (mesh->type == "wireframe")
-				cout << "basla " << transformedVertices[triangle.vertexIds[0] - 1] 
-					<< transformedVertices[triangle.vertexIds[1] - 1] 
-					<<transformedVertices[triangle.vertexIds[2] - 1] <<endl;
+				// cout << "basla " << transformedVertices[triangle.vertexIds[0] - 1] 
+				// 	<< transformedVertices[triangle.vertexIds[1] - 1] 
+				// 	<<transformedVertices[triangle.vertexIds[2] - 1] <<endl;
 
 				std::vector<Vec3> clippedLine = clipLine(transformedVertices[triangle.vertexIds[0] - 1], transformedVertices[triangle.vertexIds[1] - 1], camera);
 				transformedVertices[triangle.vertexIds[0] - 1] = clippedLine[0];
@@ -883,10 +881,10 @@ void Scene::forwardRenderingPipeline(Camera *camera, Scene *scene) {
 				// clipLine(transformedVertices[triangle.vertexIds[1] - 1], transformedVertices[triangle.vertexIds[2] - 1], camera);
 				// clipLine(transformedVertices[triangle.vertexIds[2] - 1], transformedVertices[triangle.vertexIds[0] - 1], camera);
 				
-				cout <<"2.    " << transformedVertices[triangle.vertexIds[0] - 1] 
-					<< transformedVertices[triangle.vertexIds[1] - 1] 
-					<<transformedVertices[triangle.vertexIds[2] - 1] 
-					<<"\n \n"<<endl;
+				// cout <<"2.    " << transformedVertices[triangle.vertexIds[0] - 1] 
+				// 	<< transformedVertices[triangle.vertexIds[1] - 1] 
+				// 	<<transformedVertices[triangle.vertexIds[2] - 1] 
+				// 	<<"\n \n"<<endl;
 			} 
 
 		}
