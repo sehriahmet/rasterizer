@@ -1,5 +1,5 @@
 all:
-	g++ ../../code_template/*.cpp -O3 -o rasterizer -std=c++17 -w
+	g++ code_template/*.cpp -O3 -o rasterizer -std=c++17 -w
 
 	./rasterizer input_outputs/clipping_example/empty_box_clipped.xml
 
