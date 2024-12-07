@@ -6,10 +6,10 @@ all:
 	./rasterizer ../culling_disabled_inputs/empty_box.xml 
 	./rasterizer ../culling_disabled_inputs/filled_box.xml
 	./rasterizer ../culling_disabled_inputs/sample.xml
-	./rasterizer ../culling_disabled_inputs/flag_czechia_alternative.xml # not correct
+	./rasterizer ../culling_disabled_inputs/flag_czechia_alternative.xml
 	./rasterizer ../culling_disabled_inputs/flag_czechia.xml
 	./rasterizer ../culling_disabled_inputs/flag_germany.xml
-	./rasterizer ../culling_disabled_inputs/flag_turkey_alternative.xml # not correct 
+	./rasterizer ../culling_disabled_inputs/flag_turkey_alternative.xml
 	./rasterizer ../culling_disabled_inputs/flag_turkey.xml
 	./rasterizer ../culling_disabled_inputs/horse_and_mug.xml
 
@@ -29,4 +29,3 @@ all:
 
 	./rasterizer ../different_projection_type/horse_and_mug/horse_and_mug_orthographic.xml
 	./rasterizer ../different_projection_type/horse_and_mug/horse_and_mug_perspective.xml
-	
